@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kegeln Duellberechnung - Spieltage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+        }
+        .duelle {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <h1>Berechnung der Kegeln-Spieltage</h1>
+
+    <h2>Teamnamen</h2>
+    <input type="text" id="team1Name" placeholder="Name der ersten Mannschaft" value="Mannschaft 1">
+    <input type="text" id="team2Name" placeholder="Name der zweiten Mannschaft" value="Mannschaft 2">
+    <br><br>
+
+    <h2>Erste Mannschaft (Spieler und Holz)</h2>
+    <div id="team1">
+        <input type="text" id="player1" placeholder="Spieler 1 Name">
+        <input type="number" id="holz1" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player2" placeholder="Spieler 2 Name">
+        <input type="number" id="holz2" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player3" placeholder="Spieler 3 Name">
+        <input type="number" id="holz3" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player4" placeholder="Spieler 4 Name">
+        <input type="number" id="holz4" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player5" placeholder="Spieler 5 Name">
+        <input type="number" id="holz5" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player6" placeholder="Spieler 6 Name">
+        <input type="number" id="holz6" placeholder="Holzzahl">
+    </div>
+
+    <h2>Zweite Mannschaft (Spieler und Holz)</h2>
+    <div id="team2">
+        <input type="text" id="player7" placeholder="Spieler 7 Name">
+        <input type="number" id="holz7" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player8" placeholder="Spieler 8 Name">
+        <input type="number" id="holz8" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player9" placeholder="Spieler 9 Name">
+        <input type="number" id="holz9" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player10" placeholder="Spieler 10 Name">
+        <input type="number" id="holz10" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player11" placeholder="Spieler 11 Name">
+        <input type="number" id="holz11" placeholder="Holzzahl">
+        <br>
+        <input type="text" id="player12" placeholder="Spieler 12 Name">
+        <input type="number" id="holz12" placeholder="Holzzahl">
+    </div>
+
+    <button onclick="berechneSpieltage()">Berechne Spieltage</button>
+
+    <div class="duelle" id="duelle"></div>
+
+    <script>
+        function berechneSpieltage() {
+            const team1Name = document.getElementById("team1Name").value;
+            const team2Name = document.getElementById("team2Name").value;
+
+            const team1 = [
+                { name: document.getElementById("player1").value, holz: parseInt(document.getElementById("holz1").value) },
+                { name: document.getElementById("player2").value, holz: parseInt(document.getElementById("holz2").value) },
+                { name: document.getElementById("player3").value, holz: parseInt(document.getElementById("holz3").value) },
+                { name: document.getElementById("player4").value, holz: parseInt(document.getElementById("holz4").value) },
+                { name: document.getElementById("player5").value, holz: parseInt(document.getElementById("holz5").value) },
+                { name: document.getElementById("player6").value, holz: parseInt(document.getElementById("holz6").value) }
+            ];
+
+            const team2 = [
+                { name: document.getElementById("player7").value, holz: parseInt(document.getElementById("holz7").value) },
+                { name: document.getElementById("player8").value, holz: parseInt(document.getElementById("holz8").value) },
+                { name: document.getElementById("player9").value, holz: parseInt(document.getElementById("holz9").value) },
+                { name: document.getElementById("player10").value, holz: parseInt(document.getElementById("holz10").value) },
+                { name: document.getElementById("player11").value, holz: parseInt(document.getElementById("holz11").value) },
+                { name: document.getElementById("player12").value, holz: parseInt(document.getElementById("holz12").value) }
+            ];
+
+            // Alle Permutationen von Team 2 erstellen
+            function permutationen(arr) {
+                if (arr.length === 0) return [[]];
+                const result = [];
+                for (let i = 0; i < arr.length; i++) {
+                    const current = arr[i];
+                    const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+                    for (const perm of permutationen(remaining)) {
+                        result.push([current].concat(perm));
+                    }
+                }
+                return result;
+            }
+
+            const allePermutationen = permutationen(team2);
+
+            // Funktion zur Berechnung der Punkte
+            function berechnePunkte(holz1, holz2) {
+                if (holz1 > holz2) return 1;
+                if (holz1 < holz2) return 0;
+                return 0.5;
+            }
+
+            // Alle Spieltage berechnen
+            let spieltagErgebnisse = [];
+            allePermutationen.forEach((perm, index) => {
+                let punkteTeam1 = 0;
+                let punkteTeam2 = 0;
+                let duelle = [];
+                let gesamtHolzTeam1 = 0;
+                let gesamtHolzTeam2 = 0;
+                for (let i = 0; i < 6; i++) {
+                    let punkte = berechnePunkte(team1[i].holz, perm[i].holz);
+                    punkteTeam1 += punkte;
+                    punkteTeam2 += (1 - punkte);
+                    duelle.push(`${team1[i].name} (${team1[i].holz}) vs ${perm[i].name} (${perm[i].holz}) - Punkte Team 1: ${punkte} | Punkte Team 2: ${1 - punkte}`);
+                    gesamtHolzTeam1 += team1[i].holz;
+                    gesamtHolzTeam2 += perm[i].holz;
+                }
+                spieltagErgebnisse.push({
+                    duelle: duelle,
+                    punkteTeam1: punkteTeam1,
+                    punkteTeam2: punkteTeam2,
+                    gesamtHolzTeam1: gesamtHolzTeam1,
+                    gesamtHolzTeam2: gesamtHolzTeam2
+                });
+            });
+
+            // Spieltage sortieren, sodass die mit den meisten Punkten für Team 1 oben stehen
+            spieltagErgebnisse.sort((a, b) => b.punkteTeam1 - a.punkteTeam1);
+
+            // Ergebnisse anzeigen
+            let ausgabe = `<h2>Spieltage (Sortiert nach den meisten Punkten für ${team1Name})</h2>`;
+            spieltagErgebnisse.forEach((spieltag, index) => {
+                ausgabe += `<h3>Spieltag ${index + 1}</h3>`;
+                spieltag.duelle.forEach(duell => {
+                    ausgabe += `${duell}<br>`;
+                });
+                ausgabe += `Gesamt Holz ${team1Name}: ${spieltag.gesamtHolzTeam1} | Gesamt Holz ${team2Name}: ${spieltag.gesamtHolzTeam2}<br>`;
+                ausgabe += `Gesamtpunkte ${team1Name}: ${spieltag.punkteTeam1} | Gesamtpunkte ${team2Name}: ${spieltag.punkteTeam2}<br><br>`;
+            });
+
+            document.getElementById("duelle").innerHTML = ausgabe;
+        }
+    </script>
+</body>
+</html>
